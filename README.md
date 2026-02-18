@@ -4,6 +4,17 @@ Instructions for how to write production grade solidity code.
 
 # Installation/Quickstart
 
+Install the Cyfrin marketplace, then the solskill skill.
+
+```bash
+# Open a claude code terminal, and in the claude prompt run:
+/plugin marketplace add Cyfrin/solskill 
+/plugin install solskill@Cyfrin/solskill 
+# Press Ctrl+C then run claude again. Or type /exit to quit first. 
+/exit
+claude --continue
+```
+
 # What it does
 
 - More intelligent about the sensitivity of smart contracts
