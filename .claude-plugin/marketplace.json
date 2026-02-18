@@ -1,0 +1,22 @@
+{
+  "name": "solskill-marketplace",
+  "owner": {
+    "name": "Cyfrin"
+  },
+  "metadata": {
+    "description": "Solidity smart contract development tools"
+  },
+  "plugins": [
+    {
+      "name": "solskill",
+      "source": "./",
+      "description": "Production-grade smart contract development with Solidity",
+      "version": "1.0.0",
+      "author": {
+        "name": "Cyfrin"
+      },
+      "repository": "https://github.com/Cyfrin/solskill",
+      "keywords": ["solidity", "smart-contracts", "ethereum", "foundry"]
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 Instructions for how to write production grade solidity code.
 
+# Installation/Quickstart
+
 # What it does
 
 - More intelligent about the sensitivity of smart contracts
