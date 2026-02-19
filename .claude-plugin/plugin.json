@@ -1,7 +1,7 @@
 {
     "name": "solskill",
-    "description": "A plugin to help claude code solidity better",
-    "version": "1.0.2",
+    "description": "A plugin to help claude code solidity and work with BattleChain",
+    "version": "1.1.0",
     "author": {
         "name": "Cyfrin"
     }
