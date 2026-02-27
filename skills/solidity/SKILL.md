@@ -39,16 +39,18 @@ if (myBool) {
 require(myBool, "MyError");
 ```
 
-3. In tests, prefer to use fuzz tests over unit tests
+3. In tests, prefer stateless fuzz tests over unit tests
 ```solidity
 // good - using foundry's built in stateless fuzzer
 function testMyTest(uint256 randomNumber) { }
 
 // bad
-function testMyTest() { 
+function testMyTest() {
     uint256 randomNumber = 0;
 }
 ```
+
+Additionally, write invariant (stateful) fuzz tests for core protocol properties. Use invariant-driven development: identify O(1) properties that must always hold and encode them directly into core functions ([FREI-PI pattern](https://www.nascent.xyz/idea/youre-writing-require-statements-wrong)). Use a multi-fuzzing setup like [Chimera](https://github.com/Recon-Fuzz/chimera) to run the same invariant suite across Foundry, Echidna, and Medusa — different fuzzers find different bugs.
 
 4. Functions should be grouped according to their visibility and ordered:
 
@@ -171,7 +173,7 @@ function test_StatusOf()
 
 11. NEVER. EVER. NEVER. Have private keys be in plain text. The _only_ exception to this rule is when using a default key from something like anvil, and it must be marked as such.
 
-12. Whenever a smart contract is deployed that is ownable or has admin properties (like, `onlyOwner`), the deploy script should include a way to have the admin be a different wallet address than the deployer's address.
+12. Whenever a smart contract is deployed that is ownable or has admin properties (like, `onlyOwner`), the admin must be a multisig from the very first deployment — never use the deployer EOA as admin (testnet is the only acceptable exception). See [Trail of Bits: Maturing Your Smart Contracts Beyond Private Key Risk](https://blog.trailofbits.com/2025/06/25/maturing-your-smart-contracts-beyond-private-key-risk/) — "Layer 1" (single EOA) governance is no longer acceptable for DeFi.
 
 13. Don't initialize variables to default values
 
@@ -242,3 +244,42 @@ for (uint256 i; i < len; ++i) { }
 30. If modifiers perform identical storage reads as the function body, refactor modifiers to internal functions to prevent identical storage reads
 
 31. Use Foundry's encrypted secure private key storage instead of plaintext environment variables
+
+## Deployment
+
+Use Foundry scripts (`forge script`) for both production deployments and test setup. This ensures the same deployment logic runs in development and on mainnet, making deployments more auditable and reducing the gap between test and production environments. Avoid custom test-only setup code that diverges from real deployment paths.
+
+Example: use a shared base script that both tests and production inherit from, like [this BaseTest using scripts pattern](https://github.com/rheo-xyz/very-liquid-vaults/blob/main/test/Setup.t.sol).
+
+## Governance
+
+Use [safe-utils](https://github.com/rheo-xyz/rheo-solidity/blob/main/script/ProposeSafeTxUpgradeToV1_8_4.s.sol) or equivalent tooling for governance proposals. This makes multisig interactions testable, auditable, and reproducible through Foundry scripts rather than manual UI clicks.
+
+Write fork tests that verify expected protocol state after governance proposals execute. Fork testing against mainnet state catches misconfigurations that unit tests miss — for example, the [Moonwell price feed misconfiguration](https://rekt.news/moonwell-rekt) would have been caught by a fork test asserting correct oracle state post-proposal.
+
+```solidity
+// good - fork test verifying governance proposal outcome
+function testGovernanceProposal_UpdatesPriceFeed() public {
+    vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
+
+    // Execute the governance proposal
+    _executeProposal(proposalId);
+
+    // Verify expected state after proposal
+    address newFeed = oracle.priceFeed(market);
+    assertEq(newFeed, EXPECTED_CHAINLINK_FEED);
+
+    // Verify the feed returns sane values
+    (, int256 price,,,) = AggregatorV3Interface(newFeed).latestRoundData();
+    assertGt(price, 0);
+}
+```
+
+## CI
+
+Every project should have a minimum CI pipeline running in parallel (use a matrix strategy). Suggested minimum:
+
+- `solhint` — Solidity linter for style and security rules
+- `forge build --sizes` — verify contract sizes are under the 24KB deployment limit
+- `slither` — static analysis for common vulnerability patterns
+- Fuzz/invariant testing — run Echidna, Medusa, or Foundry invariant tests with a reasonable time budget (~10 min per tool, in parallel via matrix)
