@@ -253,7 +253,7 @@ Example: use a shared base script that both tests and production inherit from, l
 
 ## Governance
 
-Use [safe-utils](https://github.com/rheo-xyz/rheo-solidity/blob/main/script/ProposeSafeTxUpgradeToV1_8_4.s.sol) or equivalent tooling for governance proposals. This makes multisig interactions testable, auditable, and reproducible through Foundry scripts rather than manual UI clicks.
+Use [safe-utils](https://github.com/Recon-Fuzz/safe-utils) or equivalent tooling for governance proposals. This makes multisig interactions testable, auditable, and reproducible through Foundry scripts rather than manual UI clicks. If you must use a UI, it's preferred to keep your transactions private, using a UI like [localsafe.eth](https://github.com/Cyfrin/localsafe.eth).
 
 Write fork tests that verify expected protocol state after governance proposals execute. Fork testing against mainnet state catches misconfigurations that unit tests miss — for example, the [Moonwell price feed misconfiguration](https://rekt.news/moonwell-rekt) would have been caught by a fork test asserting correct oracle state post-proposal.
 
