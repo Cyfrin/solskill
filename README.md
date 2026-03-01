@@ -4,7 +4,11 @@ Instructions for writing production grade solidity code and working with BattleC
 
 # Installation/Quickstart
 
-Install the Cyfrin marketplace, then the solskill skill.
+```bash
+npx skills add cyfrin/solskill
+```
+
+Or, install via the Cyfrin marketplace:
 
 ```bash
 # Open a claude code terminal, and in the claude prompt run:
