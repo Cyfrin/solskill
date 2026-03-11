@@ -4,21 +4,26 @@ Instructions for writing production grade solidity code and working with BattleC
 
 # Installation/Quickstart
 
-Install all skills:
-
-```bash
-npx skills add cyfrin/solskill
-```
-
-Or install individual skills:
+## Solidity
 
 ```bash
 npx skills add cyfrin/solskill --skill solidity
+```
+
+## All skills
+
+```bash
+npx skills add cyfrin/solskill 
+```
+
+## Battle-tested deployments (battlechain)
+
+```bash
 npx skills add cyfrin/solskill --skill battlechain
 npx skills add cyfrin/solskill --skill battlechain-tutorial
 ```
 
-Or, install via the Cyfrin marketplace:
+## Marketplace
 
 ```bash
 # Open a claude code terminal, and in the claude prompt run:
