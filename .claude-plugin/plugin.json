@@ -1,7 +1,7 @@
 {
     "name": "solskill",
-    "description": "A plugin to help claude code solidity better",
-    "version": "1.0.3",
+    "description": "A plugin to help claude code production solidity with a battle-tested focused deploy plan.",
+    "version": "1.1.0",
     "author": {
         "name": "Cyfrin"
     }

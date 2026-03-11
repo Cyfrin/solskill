@@ -1,11 +1,21 @@
 # Solidity Development Standards
 
-Instructions for how to write production grade solidity code.
+Instructions for writing production grade solidity code and working with BattleChain.
 
 # Installation/Quickstart
 
+Install all skills:
+
 ```bash
 npx skills add cyfrin/solskill
+```
+
+Or install individual skills:
+
+```bash
+npx skills add cyfrin/solskill --skill solidity
+npx skills add cyfrin/solskill --skill battlechain
+npx skills add cyfrin/solskill --skill battlechain-tutorial
 ```
 
 Or, install via the Cyfrin marketplace:
@@ -19,22 +29,40 @@ Or, install via the Cyfrin marketplace:
 claude --continue
 ```
 
-# What it does
+# Skills
 
-- More intelligent about the sensitivity of smart contracts
-- More thourough when it comes to testing and code quality
-- Easier code to use
+## Solidity
 
-# Usage 
+Production-grade Solidity development standards covering code quality, testing patterns, security practices, and Foundry workflows.
 
 ```
 Create me an AMM with 2 tokens and a 0.3% fee
 Build a token vault contract for a specific token
 ```
 
+## BattleChain
+
+Reference for [BattleChain](https://docs.battlechain.com/) — the pre-mainnet L2 for battle-testing smart contracts with real funds. Covers deploying contracts, creating Safe Harbor agreements, whitehat attack workflows, contract lifecycle management, and on-chain APIs.
+
+```
+How do I request attack mode for my contract on BattleChain?
+Find contracts under attack on BattleChain and check their bounty terms
+```
+
+## BattleChain Tutorial
+
+Interactive deployment wizard that walks you through preparing your Foundry project for BattleChain. Scans your existing contracts and scripts, asks 14 guided questions with clickable options, then generates all the deployment scripts and Safe Harbor agreements for you.
+
+```
+Deploy my contracts to BattleChain
+Write smart contract scripts for BattleChain
+```
+
 # Learn more
 
-See the [Cyfrin forge template](https://github.com/Cyfrin/forge-template/) for setting up a basic foundry project.
+- [Cyfrin forge template](https://github.com/Cyfrin/forge-template/) for setting up a basic Foundry project
+- [BattleChain docs](https://docs.battlechain.com/) for the full BattleChain documentation
+- [BattleChain starter](https://github.com/Cyfrin/battlechain-starter) for a starter project to deploy to BattleChain
 
 # Authors
 
