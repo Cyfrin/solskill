@@ -32,12 +32,20 @@ Build a token vault contract for a specific token
 
 ## BattleChain
 
-Comprehensive reference for [BattleChain](https://docs.battlechain.com/) — the pre-mainnet L2 for battle-testing smart contracts with real funds. Covers deploying contracts, creating Safe Harbor agreements, whitehat attack workflows, contract lifecycle management, and all on-chain APIs.
+Reference for [BattleChain](https://docs.battlechain.com/) — the pre-mainnet L2 for battle-testing smart contracts with real funds. Covers deploying contracts, creating Safe Harbor agreements, whitehat attack workflows, contract lifecycle management, and on-chain APIs.
 
 ```
-Deploy my contract to BattleChain and set up a Safe Harbor agreement
 How do I request attack mode for my contract on BattleChain?
 Find contracts under attack on BattleChain and check their bounty terms
+```
+
+## BattleChain Tutorial
+
+Interactive deployment wizard that walks you through preparing your Foundry project for BattleChain. Scans your existing contracts and scripts, asks 14 guided questions with clickable options, then generates all the deployment scripts and Safe Harbor agreements for you.
+
+```
+Deploy my contracts to BattleChain
+Write smart contract scripts for BattleChain
 ```
 
 # Learn more
