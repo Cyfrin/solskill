@@ -28,7 +28,12 @@ npx skills add cyfrin/solskill --skill battlechain-tutorial
 ```bash
 # Open a claude code terminal, and in the claude prompt run:
 /plugin marketplace add Cyfrin/solskill
-/plugin install solskill@Cyfrin/solskill
+
+# Install individual skills:
+/plugin install solidity@solskill-marketplace
+/plugin install battlechain@solskill-marketplace
+/plugin install battlechain-tutorial@solskill-marketplace
+
 # Press Ctrl+C then run claude again. Or type /exit to quit first.
 /exit
 claude --continue

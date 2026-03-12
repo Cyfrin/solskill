@@ -4,19 +4,37 @@
     "name": "Cyfrin"
   },
   "metadata": {
-    "description": "Solidity smart contract development and BattleChain tools"
+    "description": "Solidity smart contract development and BattleChain tools",
+    "version": "2.0.0"
   },
   "plugins": [
     {
-      "name": "solskill",
+      "name": "solidity",
+      "description": "Production-grade Solidity development standards covering code quality, testing patterns, security practices, and Foundry workflows",
       "source": "./",
-      "description": "Production-grade smart contract development with Solidity and BattleChain",
-      "version": "1.1.0",
-      "author": {
-        "name": "Cyfrin"
-      },
-      "repository": "https://github.com/Cyfrin/solskill",
-      "keywords": ["solidity", "smart-contracts", "ethereum", "foundry", "battlechain", "safe-harbor", "whitehat", "zksync"]
+      "strict": false,
+      "skills": [
+        "./skills/solidity"
+      ]
+    },
+    {
+      "name": "battlechain",
+      "description": "Reference for BattleChain, the pre-mainnet L2 for battle-testing smart contracts with real funds. Covers deploying contracts, Safe Harbor agreements, whitehat attack workflows, and contract lifecycle management",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/battlechain"
+      ]
+    },
+    {
+      "name": "battlechain-tutorial",
+      "description": "Interactive deployment wizard that walks you through preparing your Foundry project for BattleChain. Generates deployment scripts and Safe Harbor agreements",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/battlechain",
+        "./skills/battlechain-tutorial"
+      ]
     }
   ]
 }
