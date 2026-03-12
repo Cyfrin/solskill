@@ -288,3 +288,9 @@ Every project should have a minimum CI pipeline running in parallel (use a matri
 - `slither` or `aderyn` — static analysis for common vulnerability patterns
     - Before committing code that you think is done, be sure to run aderyn and/or slither on the codebase and inspect the output. Even warnings may lead you to find issues in the codebase.
 - Fuzz/invariant testing — run Echidna, Medusa, or Foundry invariant tests with a reasonable time budget (~10 min per tool, in parallel via matrix)
+
+# Tool updates
+
+## Foundry
+
+To install foundry dependencies, you don't need the `--no-commit` flag anymore.
