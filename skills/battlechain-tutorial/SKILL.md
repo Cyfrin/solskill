@@ -42,6 +42,31 @@ This context informs the questions below and is critical for script generation i
 
 ### Question flow (ask in this order, one per message):
 
+**0. Target chain**
+Use `AskUserQuestion`:
+> "Where are you deploying these contracts?"
+- Label: "BattleChain", Description: "Deploy to BattleChain testnet (chain 627) — full lifecycle with whitehats"
+- Label: "Another L2", Description: "Deploy to a different EVM L2 — I'll help you set up CreateX and Safe Harbor too"
+- Label: "Both", Description: "Deploy to BattleChain AND another L2"
+
+If "BattleChain" only: skip to Question 1 and continue with the existing flow unchanged.
+
+If "Another L2" or "Both": ask the following sub-questions before moving to Question 1.
+
+**0a. CreateX deployment (non-BattleChain only)**
+Use `AskUserQuestion`:
+> "Do you want to use CreateX for deterministic contract addresses on your L2? This gives you the same addresses across all chains."
+- Label: "Yes (Recommended)", Description: "Use CreateX (0xba5Ed...) — deployed on 190+ EVM chains for deterministic CREATE2/CREATE3"
+- Label: "No", Description: "Use standard deployment — addresses will differ per chain"
+
+**0b. Safe Harbor agreement (non-BattleChain only)**
+Use `AskUserQuestion`:
+> "Do you want to create a Safe Harbor agreement for your non-BattleChain deployment too? This protects whitehats who responsibly disclose vulnerabilities."
+- Label: "Yes (Recommended)", Description: "Create a Safe Harbor agreement on your L2 using the SEAL Safe Harbor V3 URI"
+- Label: "Not yet", Description: "Skip for now — you can add one later"
+
+If the user chose "Yes" for Safe Harbor: the bounty/agreement questions (3–13) apply to both chains. Collect answers once and generate agreements for each target chain. The BattleChain agreement uses `BATTLECHAIN_SAFE_HARBOR_URI` and the non-BattleChain agreement uses `SAFE_HARBOR_V3_URI`.
+
 **1. Contract inventory**
 Before asking, scan the project for Solidity files using `Glob` with pattern `src/**/*.sol`. Present the discovered contracts using `AskUserQuestion` with `multiSelect: true`. List up to 4 contracts as options (if more than 4, group or summarize). Example options:
 - Label: "Token.sol", Description: "src/Token.sol — ERC20 token contract"
@@ -210,49 +235,66 @@ BATTLECHAIN_CAIP2     = "eip155:627"
 
 ### Modify existing deployment scripts (chain ID branching)
 
-**Do NOT create a separate `Setup.s.sol`.** Instead, modify the project's existing deployment script(s) in `script/` to add a BattleChain code path using `block.chainid`. The existing mainnet/testnet logic must remain untouched.
+**Do NOT create a separate `Setup.s.sol`.** Instead, modify the project's existing deployment script(s) in `script/` to add chain-specific code paths using `block.chainid`. The existing mainnet/testnet logic must remain untouched.
+
+The generated scripts should inherit `BCScript` from `cyfrin/battlechain-lib`. This gives access to:
+- `bcDeployCreate()` / `bcDeployCreate2()` / `bcDeployCreate3()` — deploy via BattleChainDeployer on BattleChain, or via CreateX (0xba5Ed...) on all other supported chains
+- `defaultAgreementDetails()` — auto-selects BattleChain scope + URI on BattleChain, or current chain's CAIP-2 scope + generic Safe Harbor V3 URI on other chains
+- `createAndAdoptAgreement()` — works on any chain with Safe Harbor registry/factory
+- `requestAttackMode()` — BattleChain only (reverts on other chains)
+- `_isBattleChain()` — runtime chain detection
 
 Pattern to follow — add a chain ID check in the `run()` function (or equivalent entry point):
 
 ```solidity
-if (block.chainid == 627) {
-    // BattleChain deployment path
+if (_isBattleChain()) {
     _deployBattleChain();
+} else if (block.chainid == TARGET_L2_CHAIN_ID) {
+    _deployL2();
 } else {
-    // Original deployment logic (unchanged)
     _deployDefault();
 }
 ```
 
-If the existing script doesn't already use helper functions, refactor the existing deployment logic into a `_deployDefault()` (or similar) internal function, then add a `_deployBattleChain()` function alongside it. **Do not alter the behavior of the original path.**
+If the existing script doesn't already use helper functions, refactor the existing deployment logic into a `_deployDefault()` (or similar) internal function, then add the other functions alongside it. **Do not alter the behavior of the original path.**
 
 The `_deployBattleChain()` function must:
-- Deploy contracts via `IBattleChainDeployer.deployCreate2(salt, bytecode)` instead of direct `new` or `create`
+- Deploy contracts via `bcDeployCreate2(salt, bytecode)` (which uses BattleChainDeployer — CreateX + auto AttackRegistry registration)
 - Use the same constructor arguments as the original path
 - Swap external dependency addresses to their BattleChain equivalents (as provided by the user in Question 2), or deploy mocks if the user chose that option
 - Replicate all post-deployment initialization calls from the original path (e.g. `setVault()`, `transferOwnership()`, `grantRole()`, `initialize()`)
 - Add seeding logic at the end with the user's specified seed amount
 - Log all deployed addresses with instructions to copy into `.env`
 
+The `_deployL2()` function (if user chose "Another L2" or "Both"):
+- If user chose CreateX: deploy via `bcDeployCreate2(salt, bytecode)` (which calls CreateX directly on non-BattleChain chains)
+- If user chose standard deployment: deploy with `new` or the project's existing pattern
+- Swap external dependency addresses to their L2 equivalents
+- Replicate all post-deployment initialization calls
+- Log all deployed addresses
+
 If the project has multiple deployment scripts (e.g. separate deploy + init scripts), add the chain ID branching to each one as appropriate.
 
 ### New script: `CreateAgreement.s.sol`
-Create the Safe Harbor agreement with all user-specified terms.
+Create the Safe Harbor agreement with all user-specified terms. This script should work on both BattleChain and non-BattleChain chains.
 
+- Inherit `BCScript` from `cyfrin/battlechain-lib`
 - Populate `Contact[]` from their security contact info
-- Populate `ScopeAccount[]` with all in-scope contracts and their `childContractScope`
-- Populate `ScopeChain[]` with `caip2ChainId = BATTLECHAIN_CAIP2` and their recovery address
+- Use `defaultAgreementDetails()` which auto-selects:
+  - BattleChain: `buildBattleChainScope` + `BATTLECHAIN_SAFE_HARBOR_URI`
+  - Other chains: `buildChainScope` with runtime CAIP-2 + `SAFE_HARBOR_V3_URI`
+- If the user needs custom scopes per chain, use `buildAgreementDetails()` with explicit `BcChain[]` and URI instead
 - Populate `BountyTerms` with their bounty %, cap, retainable, identity, diligence, aggregate cap
 - Set `agreementURI` to their value or `""` if blank
-- Call `IAgreementFactory.create(details, deployer, salt)`
-- Call `IAgreement(agreement).extendCommitmentWindow(block.timestamp + N days)`
-- Call `ISafeHarborRegistry.adoptSafeHarbor(agreement)`
+- Call `createAndAdoptAgreement(details, deployer, salt)` (handles create + 14-day commitment + adopt)
+- For non-BattleChain chains: the user must call `_setBcAddresses(registry, factory, attackRegistry, deployer)` to provide the Safe Harbor contract addresses on that chain
 - Log `AGREEMENT_ADDRESS` for `.env`
 
 ### New script: `RequestAttackMode.s.sol`
-Submit the attack mode request.
+Submit the attack mode request. **BattleChain only.**
 
-- Call `IAttackRegistry(ATTACK_REGISTRY).requestUnderAttack(agreement)`
+- Guard with `require(_isBattleChain(), "Attack mode is BattleChain-only")`
+- Call `requestAttackMode(agreement)` (from BCScript)
 - Log state transition info (ATTACK_REQUESTED = 2, UNDER_ATTACK = 3)
 - Include a `cast call` command comment for checking status
 
@@ -260,28 +302,30 @@ Submit the attack mode request.
 
 ## Phase 4 — Deployment Instructions
 
-After generating the scripts, provide the following step-by-step instructions:
+After generating the scripts, provide step-by-step instructions. Tailor these to the user's target chain selection from Question 0.
+
+**If BattleChain (or both):**
 
 ```
-## Deployment Steps
+## BattleChain Deployment Steps
 
 ### 1. Environment Setup
 Add to your `.env`:
   SENDER_ADDRESS=<your deployer address>
-  # After Setup.s.sol:
+  # After Deploy script:
   TOKEN_ADDRESS=<from logs>
-  VAULT_ADDRESS=<from logs>   # (or your contract address)
+  VAULT_ADDRESS=<from logs>   # (or your contract addresses)
   # After CreateAgreement.s.sol:
   AGREEMENT_ADDRESS=<from logs>
 
-### 2. Run Setup
-forge script script/Setup.s.sol --rpc-url battlechain --broadcast
+### 2. Deploy Contracts
+forge script script/Deploy.s.sol --rpc-url battlechain --broadcast --skip-simulation
 
 ### 3. Create Safe Harbor Agreement
-forge script script/CreateAgreement.s.sol --rpc-url battlechain --broadcast
+forge script script/CreateAgreement.s.sol --rpc-url battlechain --broadcast --skip-simulation
 
 ### 4. Request Attack Mode
-forge script script/RequestAttackMode.s.sol --rpc-url battlechain --broadcast
+forge script script/RequestAttackMode.s.sol --rpc-url battlechain --broadcast --skip-simulation
 
 ### 5. Await DAO Approval
 cast call $ATTACK_REGISTRY \
@@ -294,6 +338,22 @@ cast call $ATTACK_REGISTRY \
 ### Contract Lifecycle Reminder
 NEW_DEPLOYMENT → ATTACK_REQUESTED → UNDER_ATTACK → PROMOTION_REQUESTED → PRODUCTION
 Key windows: 14-day auto-promote if DAO doesn't act, 3-day promotion delay (still attackable)
+```
+
+**If another L2 (or both):**
+
+```
+## [L2 Name] Deployment Steps
+
+### 1. Deploy Contracts
+forge script script/Deploy.s.sol --rpc-url <l2-rpc> --broadcast
+
+### 2. Create Safe Harbor Agreement (if opted in)
+forge script script/CreateAgreement.s.sol --rpc-url <l2-rpc> --broadcast
+# Note: Requires Safe Harbor registry/factory to be deployed on this chain.
+# Set BC_REGISTRY and BC_FACTORY env vars, or call _setBcAddresses() in the script.
+
+# No attack mode step — that is BattleChain only.
 ```
 
 ---
