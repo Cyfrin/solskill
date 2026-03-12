@@ -1,5 +1,5 @@
 ---
-name: solskill
+name: solidity
 description: Create production grade smart contracts. Use this skill when the user asks to write smart contracts, specially if they are going to be deployed to production (to a mainnet, or used in a mainnet script).
 disable-model-invocation: true
 ---
