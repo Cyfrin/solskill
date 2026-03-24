@@ -35,6 +35,7 @@ npx skills add cyfrin/solskill --skill battlechain-tutorial
 /plugin install battlechain-tutorial@solskill
 
 # Press Ctrl+C then run claude again. Or type /exit to quit first.
+# CLAUDE WILL TELL YOU THAT RUNNING /reload-plugins WORKS, IT DOES NOT
 /exit
 claude --continue
 ```
