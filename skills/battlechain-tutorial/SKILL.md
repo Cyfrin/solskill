@@ -330,7 +330,7 @@ forge script script/RequestAttackMode.s.sol --rpc-url battlechain --broadcast --
 ### 5. Await DAO Approval
 cast call $ATTACK_REGISTRY \
   "getAgreementState(address)(uint8)" $AGREEMENT_ADDRESS \
-  --rpc-url https://testnet.battlechain.com:3051
+  --rpc-url https://testnet.battlechain.com
 # 2 = ATTACK_REQUESTED (pending), 3 = UNDER_ATTACK (approved)
 
 ### 6. You're live — whitehats can now legally attack your contracts.

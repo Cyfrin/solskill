@@ -110,7 +110,7 @@ forge verify-contract <ADDRESS> src/MyVault.sol:MyVault \
     --verifier-url https://block-explorer-api.testnet.battlechain.com/api \
     --verifier custom \
     --etherscan-api-key "1234" \
-    --rpc-url https://testnet.battlechain.com:3051
+    --rpc-url https://testnet.battlechain.com
 ```
 
 The API key is not validated — any non-empty string works.
@@ -121,7 +121,7 @@ Add `--verify` to your `forge script` call:
 
 ```bash
 forge script script/Deploy.s.sol \
-    --rpc-url https://testnet.battlechain.com:3051 \
+    --rpc-url https://testnet.battlechain.com \
     --broadcast --skip-simulation -g 300 \
     --verify \
     --verifier-url https://block-explorer-api.testnet.battlechain.com/api \
