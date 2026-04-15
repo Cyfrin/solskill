@@ -151,10 +151,6 @@ Any contract over 24,576 bytes will fail to deploy.
 3. Use `--via-ir` for deeper optimization (slower compile, smaller output)
 4. Extract constants and large string literals into separate libraries
 
-### BattleChain does not support EIP-1559
-
-Every `forge script` and `cast send` call must include `--legacy`. Without it, transactions are rejected.
-
 ## Hardhat
 
 Coming soon...
