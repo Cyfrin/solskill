@@ -159,7 +159,7 @@ function test_StatusOf()
 }
 ```
 
-8. Prefer strict pragma versions for contracts, and floating pragma versions for tests, libraries, abstract contracts, interfaces, and scripts.
+8. Prefer strict pragma versions for contracts, and floating pragma versions for tests, libraries, abstract contracts, interfaces, and scripts. Use `0.8.34` or later as the minimum version — versions `0.8.28` through `0.8.33` have a [high-severity transient storage bug](https://soliditylang.org/blog/2026/02/18/solidity-0.8.34-release-announcement/) where the IR pipeline (`--via-ir`) can emit `sstore` instead of `tstore` (and vice versa) when clearing storage, causing writes to the wrong storage domain.
 
 9. Add a security contact to the natspec at the top of your contracts
 
@@ -230,7 +230,7 @@ for (uint256 i; i < len; ++i) { }
 
 22. Use `nonReentrant` modifier before other modifiers
 
-23. Use `ReentrancyGuardTransient` for faster `nonReentrant` modifiers
+23. Use `ReentrancyGuardTransient` for faster `nonReentrant` modifiers. Requires `pragma solidity ^0.8.34;` — do not use with `0.8.28`–`0.8.33` due to the transient storage clearing bug.
 
 24. Prefer `Ownable2Step` instead of `Ownable`
 
