@@ -12,6 +12,51 @@ Instructions for working with [BattleChain](https://docs.battlechain.com/), from
 
 BattleChain is a ZKSync-based L2 blockchain that inserts a battle-testing phase between testnet and mainnet: **Dev -> Testnet -> BattleChain -> Mainnet**. Protocols deploy audited contracts with real funds, whitehats legally attack them for bounties under Safe Harbor agreements, and surviving contracts promote to production.
 
+## Networks
+
+| Network | Chain ID | RPC | Explorer | CAIP-2 | Status |
+|---------|----------|-----|----------|--------|--------|
+| BattleChain | 626 | https://mainnet.battlechain.com | https://explorer.mainnet.battlechain.com/ | `eip155:626` | Live — production network |
+| BattleChain Testnet | 627 | https://testnet.battlechain.com | https://explorer.testnet.battlechain.com/ | `eip155:627` | Live — tooling default |
+
+Both networks have a block explorer with an API and contract verification (mainnet API: https://block-explorer-api.mainnet.battlechain.com/api, testnet API: https://block-explorer-api.testnet.battlechain.com/api). The mock dependency contracts (tokens, Chainlink, Uniswap, etc.) are testnet-only. `battlechain-lib` tooling defaults to testnet; set `NETWORK=mainnet` to target mainnet.
+
+### Mainnet core contracts (chain 626)
+
+| Contract | Address |
+|----------|---------|
+| Safe Harbor Registry (proxy) | `0xd229f4EE1bAE432010b72a9d1bD682570F4C6eBe` |
+| Registry Implementation | `0xBFF0ec94740c287932B50E64c2e8b380129B99a1` |
+| Agreement Factory (proxy) | `0xCdB7F5C0F708baBaabE82afE1DbA8362023AcFdd` |
+| AgreementFactory Implementation | `0x8d4fEDF4462E3876Ae7C70CC0C5cebA482003Ad5` |
+| Attack Registry (proxy) | `0x24876e481eC7198CAC95af739Df2a852CE65A415` |
+| AttackRegistry Implementation | `0x03A3228A4ce38362289E715bbc26Cac8b98e421B` |
+| BattleChainDeployer | `0xD12765D21dDba418B8Fc0583c4716763e03Aa078` |
+| Registry Moderator | `0x445d5685c4Ae71550Da0716b82B434AEA140E0c7` |
+| CreateX | `0xa397f06F07251A3AEd53f6d3019A2a6cbd83E53e` |
+
+Mainnet CreateX was deployed by Cyfrin and is NOT at the well-known `0xba5Ed...` address. `battlechain-lib` resolves the correct address per chain — do not hardcode `0xba5Ed...` on BattleChain.
+
+### Mainnet Safe contracts (chain 626)
+
+Real Safe contracts, deployed by Cyfrin (not the Safe team):
+
+| Contract | Address |
+|----------|---------|
+| Safe | `0xFF716747B4D28EAE844Dc069387C9bFC00e51737` |
+| SafeL2 | `0xb6524C4fBcEd314EAad98Bc750B6AD76B64d7f8A` |
+| SafeProxyFactory | `0x8d0D56f72E266a4BfA05340f68409dEBbdbdc9e2` |
+| CreateCall | `0x5A499D08755a9dC90208Ef5b031a3118789EBF5A` |
+| MultiSend | `0x28E369665036bFe0041c1E5838A608b1a818296f` |
+| MultiSendCallOnly | `0xed4c81c91602CDD5c1e396a1AF28735E03EdA9e2` |
+| SignMessageLib | `0x95cb704BFF25b8943BcE3fAE5D1b4665f7b08115` |
+| SafeToL2Setup | `0xa8fB860254764C68360596f64BA841b077bebBA4` |
+| TokenCallbackHandler | `0x63b920c6D0B5EC07345d9810169376192654d38F` |
+| CompatibilityFallbackHandler | `0x2744C4f8336B6e2A8a182495FbB327Db493F303f` |
+| ExtensibleFallbackHandler | `0x115b290ecDe805FD846E0C347f3419A4234Fd673` |
+
+For testnet contract addresses, fetch the full docs (below).
+
 ## Full Documentation
 
 For up-to-date contract addresses, function signatures, struct definitions, enums, state transitions, bounty calculation rules, Safe Harbor agreement details, and all other technical reference material, fetch the full docs:
@@ -65,6 +110,20 @@ remappings = ["battlechain-lib/=lib/battlechain-lib/src/"]
 
 Only `requestAttackMode` is BattleChain-specific. Everything else works on any supported chain.
 
+## Attack mode approval
+
+`requestAttackMode` moves the agreement to ATTACK_REQUESTED; the registry moderator must approve it to reach UNDER_ATTACK.
+
+- **Testnet (627):** the moderator is the permissionless `MockRegistryModerator` at `0x3DdA228A38b4d7438bBF5D5137c8D1090DcaF6bF` — anyone can approve their own attack request instantly:
+
+  ```bash
+  cast send 0x3DdA228A38b4d7438bBF5D5137c8D1090DcaF6bF \
+      "approveAttack(address)" <AGREEMENT_ADDRESS> \
+      --rpc-url https://testnet.battlechain.com --account <your-account>
+  ```
+
+- **Mainnet (626):** approval is a controlled DAO action by the Registry Moderator (`0x445d5685c4Ae71550Da0716b82B434AEA140E0c7`).
+
 ## Foundry
 
 When working with foundry scripts, as of today, you need to pass a flag to skip simulations, for example:
@@ -83,7 +142,7 @@ If the issues persist. If using a `justfile` or `makefile` please add these flag
 
 ## Verification
 
-BattleChain uses a custom block explorer API for contract verification. The `battlechain-lib` ships a reusable justfile module with verification targets.
+BattleChain uses a custom block explorer API for contract verification. Verification works on both networks — testnet (chain 627) and mainnet (chain 626). The examples below target testnet; for mainnet, swap in chain ID 626, verifier URL https://block-explorer-api.mainnet.battlechain.com/api, and RPC https://mainnet.battlechain.com. The `battlechain-lib` ships a reusable justfile module with verification targets.
 
 ### Install verification targets
 
@@ -101,6 +160,8 @@ This gives you:
 | `bc-verify-broadcast <script>` | Verify all contracts from a broadcast file (handles CreateX/BCDeploy factory creates) |
 | `bc-deploy <script> <account> <sender>` | Deploy with standard BC flags |
 | `bc-deploy-verify <script> <account> <sender>` | Deploy + verify in one step |
+
+The targets are network-aware: they default to testnet, and `NETWORK=mainnet` switches the RPC and explorer API to mainnet.
 
 ### Verify manually
 
