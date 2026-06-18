@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Solidity smart contract development and BattleChain tools",
-    "version": "3.0.0"
+    "version": "3.0.1"
   },
   "plugins": [
     {
